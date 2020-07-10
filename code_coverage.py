@@ -5,13 +5,14 @@ class Function:
     """
     Class to represent a function in the script
     """
-    def __init__(self, name, start):
+    def __init__(self, name, start, params):
         """Constructor"""
         self.name = name
         self.start = start
         self.end = 1
         self.lines = []
         self.covered = False
+        self.params = params
 
     def add_line(self, lineNumb):
         """Adds a line to the lines list"""
@@ -50,7 +51,8 @@ def get_all_functions(lines):
         if (not line.startswith("#") and "test_" not in line and "main()" not in line and "__main" not in line):
             if "def" in line:
                 inFunc = True
-                func = Function(line.split("def ")[1].split("(")[0], lineNumb)
+                params = line.split("(")[1].split(")")[0].split(",")
+                func = Function(line.split("def ")[1].split("(")[0], lineNumb, params)
                 curr = func.name
                 functions[curr] = func
             elif line != "" and line != "\n" and inFunc:
@@ -87,6 +89,9 @@ def coverage_check(lines, functions):
             localVars = {}
             asserted = functions[line.split(
                 "assert ")[1].strip().split("(")[0]]
+            passedParms = line.split("(")[1].split(")")[0].split(",")
+            for i in range(0, len(asserted.params)):
+                localVars[asserted.params[i]] = passedParms[i]
             rec_traverse_func(asserted, functions, lines, localVars)
             inTest = False
     for func in functions.values():
@@ -106,6 +111,9 @@ def rec_traverse_func(function, functions, lines, localVars):
             vars = line.strip().split("=")[0]
             if isinstance(vars, str):
                 vars = [vars]
+            passedParms = line.split("(")[1].split(")")[0].split(",")
+            for i in range(0, len(func.params)):
+                localVars[func.params[i]] = passedParms[i]
             localVars = add_returned_vars(
                 localVars, vars, rec_traverse_func(func, functions, lines, localVars))
         elif "=" in line:
@@ -119,6 +127,8 @@ def rec_traverse_func(function, functions, lines, localVars):
                     continue
                 else:
                     skipStatement = False
+        elif "else" in line:
+            skipStatement = False
         elif skipStatement:
             continue
         elif "return " in line:

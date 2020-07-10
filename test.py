@@ -15,6 +15,12 @@ def if_true_test():
     else:
         return False
 
+def has_params(bar):
+    if bar:
+        return bar
+    else:
+        return False
+
 def never_used():
     return True
 
@@ -36,3 +42,9 @@ def test_stored_value():
 
 def test_if_true():
     assert if_true_test()
+
+def test_has_params():
+    assert has_params(True)
+
+def test_has_params_false():
+    assert has_params(False) == False
