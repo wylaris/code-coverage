@@ -2,7 +2,11 @@ import time
 
 
 class Function:
+    """
+    Class to represent a function in the script
+    """
     def __init__(self, name, start):
+        """Constructor"""
         self.name = name
         self.start = start
         self.end = 1
@@ -10,16 +14,20 @@ class Function:
         self.covered = False
 
     def add_line(self, lineNumb):
+        """Adds a line to the lines list"""
         self.lines.append(lineNumb)
 
     def remove_line(self, lineNumb):
+        """Removes a line from the lines list via value"""
         if lineNumb in self.lines:
             self.lines.remove(lineNumb)
 
     def set_end(self):
+        """Sets the line where the function ends"""
         self.end = self.start + len(self.lines)
 
     def check_coverage(self):
+        """Checks if there are any untested lines in the file"""
         if len(self.lines) == 0:
             self.covered = True
 
@@ -29,7 +37,11 @@ class Function:
     def __str__(self):
         return self.name
 
+
 def get_all_functions(lines):
+    """
+    Reads through the file and stores all the functions
+    """
     functions = {}
     lineNumb = 1
     inFunc = False
@@ -50,13 +62,21 @@ def get_all_functions(lines):
         lineNumb += 1
     return functions
 
+
 def print_functions(functions):
+    """
+    Prints all the functions in the script
+    """
     print("\nFunctions found:")
     for func in functions:
         print("  " + func)
     print("\n\n")
 
-def coverage_check(lines,functions):
+
+def coverage_check(lines, functions):
+    """
+    Follows the tests to see what lines are covered
+    """
     inTest = False
     currTest = None
     for line in lines:
@@ -65,13 +85,18 @@ def coverage_check(lines,functions):
             currTest = line.split("def ")[1].split("(")[0]
         elif inTest and "assert" in line:
             localVars = {}
-            asserted = functions[line.split("assert ")[1].strip().split("(")[0]]
+            asserted = functions[line.split(
+                "assert ")[1].strip().split("(")[0]]
             rec_traverse_func(asserted, functions, lines, localVars)
             inTest = False
     for func in functions.values():
         func.check_coverage()
 
+
 def rec_traverse_func(function, functions, lines, localVars):
+    """
+    Recursively steps through the functions to follow execution
+    """
     skipStatement = False
     returnedVars = []
     for i in range(function.start, function.end):
@@ -81,7 +106,8 @@ def rec_traverse_func(function, functions, lines, localVars):
             vars = line.strip().split("=")[0]
             if isinstance(vars, str):
                 vars = [vars]
-            localVars = add_returned_vars(localVars, vars, rec_traverse_func(func, functions, lines, localVars))
+            localVars = add_returned_vars(
+                localVars, vars, rec_traverse_func(func, functions, lines, localVars))
         elif "=" in line:
             parts = line.strip().split("=")
             localVars[parts[0].strip()] = parts[1].strip()
@@ -106,12 +132,20 @@ def rec_traverse_func(function, functions, lines, localVars):
         function.remove_line(i + 1)
     return returnedVars
 
+
 def add_returned_vars(dict, vars, list):
+    """
+    Add the values a function returns to the localVars
+    """
     for i in range(0, len(list)):
         dict[vars[i]] = list[i]
     return dict
 
+
 def print_uncovered(functions):
+    """
+    Prints the coverage report
+    """
     covered = []
     uncovered = []
     for func in functions.values():
@@ -129,22 +163,29 @@ def print_uncovered(functions):
             print("    " + str(line))
 
 
-
 def main():
+    """
+    Main function to start the execution and time the run
+    """
     start = time.process_time()
     lines = get_lines_from_file("test.py")
     functions = get_all_functions(lines)
     print_functions(functions)
     coverage_check(lines, functions)
     print_uncovered(functions)
-    print("Time taken for coverage: " + str(time.process_time() - start) + " seconds")
+    print("Time taken for coverage: " +
+          str(time.process_time() - start) + " seconds")
 
 
 def get_lines_from_file(filename):
+    """
+    Stores all the lines of text from the file for later use to close out the file
+    """
     file = open(filename, "r")
     lines = file.readlines()
     file.close()
     return lines
+
 
 if __name__ == "__main__":
     main()
